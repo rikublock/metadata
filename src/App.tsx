@@ -1,3 +1,4 @@
+import "@fontsource/inter";
 import "./App.css";
 
 const App = () => {
