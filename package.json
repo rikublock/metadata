@@ -1,5 +1,6 @@
 {
   "name": "metadata-reader",
+  "description": "Minimalistic web app for reading media file metadata",
   "private": true,
   "version": "1.0.0",
   "author": {
