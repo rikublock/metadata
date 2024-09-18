@@ -7,7 +7,7 @@ export default defineConfig({
     template: "./public/index.html",
   },
   output: {
-    assetPrefix: "https://rikublock.github.io/metadata-reader/",
+    assetPrefix: "https://meta.rikublock.dev/",
     copy: [
       {
         from: "./node_modules/mediainfo.js/dist/MediaInfoModule.wasm",
