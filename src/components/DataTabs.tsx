@@ -28,7 +28,7 @@ export default function DataTabs() {
       event: React.SyntheticEvent | null,
       newValue: number | string | null,
     ): void => {
-      console.log("onChange", newValue);
+      console.debug("onChange", newValue);
       setValue(newValue);
     },
     [],
