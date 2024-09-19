@@ -1,5 +1,7 @@
 import React from "react";
 
+import GithubCorner from "react-github-corner";
+
 import { Alert, Box, Stack, Typography } from "@mui/joy";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 
@@ -28,6 +30,7 @@ export default function Main() {
         minHeight: "100dvh",
       }}
     >
+      <GithubCorner href="https://github.com/rikublock/metadata-reader" />
       <Stack spacing="0.75rem">
         <Typography level="h3">Analyze Media File Metadata</Typography>
         <Alert startDecorator={<InfoOutlinedIcon />}>
