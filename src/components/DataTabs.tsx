@@ -45,6 +45,7 @@ export default function DataTabs() {
 
   const onClickClear = React.useCallback(() => {
     reset();
+    setValue(0);
   }, [reset]);
 
   return (
