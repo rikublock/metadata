@@ -15,6 +15,7 @@ import {
 
 import { useMediaInfo, makeReadChunk } from "../contexts/MediaInfoContext";
 import { formatFileSize, formatKey } from "../utils/format";
+import { computeSha256sum } from "../utils/hash";
 
 type Props = {
   value: string | number;
@@ -46,6 +47,9 @@ export default function DataTabPanel({ value, file }: Props) {
         const content: Section[] = [];
 
         try {
+          // compute hash checksum
+          const hash = await computeSha256sum(file);
+
           // extract general file info
           content.push({
             title: "General",
@@ -61,6 +65,10 @@ export default function DataTabPanel({ value, file }: Props) {
               {
                 key: "mime_type",
                 value: file.type,
+              },
+              {
+                key: "hash_sha256",
+                value: hash,
               },
             ],
           });
