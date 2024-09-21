@@ -75,21 +75,29 @@ export default function DataTabPanel({ value, file }: Props) {
 
           // attempt to extract image metadata
           try {
-            const t = await ExifReader.load(file, {
+            const tags = await ExifReader.load(file, {
               includeUnknown: true,
               async: true,
             });
 
-            delete t["MakerNote"];
+            delete tags["MakerNote"];
 
             const r: Row[] = [];
-            for (const [key, value] of Object.entries(t)) {
+            for (const [key, value] of Object.entries(tags)) {
               let v = value.description.toString();
               let isJson = false;
 
               if (v == "[Unicode encoded text]") {
-                if (Array.isArray(value.value)) {
-                  v = String.fromCharCode(...(value.value as any));
+                if (Array.isArray(value.value) && value.value.length >= 8) {
+                  let text = "";
+                  const view = new DataView(
+                    Uint8Array.from(value.value as any).slice(8).buffer,
+                  );
+                  for (let offset = 0; offset < view.byteLength; offset += 2) {
+                    const code = view.getUint16(offset, false);
+                    text += String.fromCodePoint(code);
+                  }
+                  v = text;
                 }
               } else if (v.startsWith("{")) {
                 try {
