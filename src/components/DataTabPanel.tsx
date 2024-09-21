@@ -26,8 +26,28 @@ type Props = {
 export default function DataTabPanel({ value, file }: Props) {
   const mediaInfoRef = useMediaInfo();
   const [loading, setLoading] = React.useState<boolean>(false);
+  const [hash, setHash] = React.useState<string>("");
   const [sections, setSections] = React.useState<Section[]>([]);
 
+  // compute hash checksum
+  React.useEffect(() => {
+    let mounted = true;
+
+    const load = async (): Promise<void> => {
+      const h = await computeSha256sum(file);
+      if (mounted) {
+        setHash(h);
+      }
+    };
+
+    load();
+
+    return () => {
+      mounted = false;
+    };
+  }, [file]);
+
+  // compute metadata
   React.useEffect(() => {
     let mounted = true;
 
@@ -37,9 +57,6 @@ export default function DataTabPanel({ value, file }: Props) {
         const content: Section[] = [];
 
         try {
-          // compute hash checksum
-          const hash = await computeSha256sum(file);
-
           // extract general file info
           content.push({
             title: "General",
@@ -58,7 +75,8 @@ export default function DataTabPanel({ value, file }: Props) {
               },
               {
                 key: "hash_sha256",
-                value: hash,
+                value: "Computing...",
+                type: "loader",
               },
             ],
             type: TableType.COMMON,
@@ -162,12 +180,22 @@ export default function DataTabPanel({ value, file }: Props) {
     };
   }, [file, mediaInfoRef]);
 
+  // add checksum hash
+  const sectionsUpdated = React.useMemo(() => {
+    if (hash.length > 0 && sections.length > 0) {
+      const row = sections[0].rows[3];
+      row.value = hash;
+      row.type = "string";
+    }
+    return sections;
+  }, [sections, hash]);
+
   return (
     <TabPanel value={value}>
       <AccordionGroup disableDivider>
         {!loading ? (
           <React.Fragment>
-            {sections.map((section, index) => (
+            {sectionsUpdated.map((section, index) => (
               <Accordion key={index} defaultExpanded>
                 <AccordionSummary
                   sx={(theme) => ({

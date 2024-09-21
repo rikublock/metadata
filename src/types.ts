@@ -5,7 +5,7 @@ export enum TableType {
 export type Row = {
   key: string;
   value: string;
-  type?: "string" | "json" | "code";
+  type?: "string" | "json" | "code" | "loader";
 };
 
 export type Section = {
