@@ -9,28 +9,18 @@ import {
   AccordionSummary,
   Box,
   CircularProgress,
-  Table,
   TabPanel,
 } from "@mui/joy";
 
 import { useMediaInfo, makeReadChunk } from "../contexts/MediaInfoContext";
 import { formatFileSize, formatKey } from "../utils/format";
 import { computeSha256sum } from "../utils/hash";
+import { Row, Section, TableType } from "../types";
+import CommonTable from "./CommonTable";
 
 type Props = {
   value: string | number;
   file: File;
-};
-
-type Row = {
-  key: string;
-  value: string;
-  isJson?: boolean;
-};
-
-type Section = {
-  title: string;
-  rows: Row[];
 };
 
 export default function DataTabPanel({ value, file }: Props) {
@@ -71,6 +61,7 @@ export default function DataTabPanel({ value, file }: Props) {
                 value: hash,
               },
             ],
+            type: TableType.COMMON,
           });
 
           // attempt to extract image metadata
@@ -85,7 +76,7 @@ export default function DataTabPanel({ value, file }: Props) {
             const r: Row[] = [];
             for (const [key, value] of Object.entries(tags)) {
               let v = value.description.toString();
-              let isJson = false;
+              let type: Row["type"] = "string";
 
               if (v == "[Unicode encoded text]") {
                 if (Array.isArray(value.value) && value.value.length >= 8) {
@@ -103,7 +94,7 @@ export default function DataTabPanel({ value, file }: Props) {
                 try {
                   const data = JSON.parse(value.description);
                   v = JSON.stringify(data, undefined, 2);
-                  isJson = true;
+                  type = "json";
                 } catch (e) {
                   // okay, attempted to parse JSON, but didn't work
                 }
@@ -112,13 +103,14 @@ export default function DataTabPanel({ value, file }: Props) {
               r.push({
                 key: formatKey(key),
                 value: v,
-                isJson,
+                type,
               });
             }
 
             content.push({
               title: "Details",
               rows: r,
+              type: TableType.COMMON,
             });
             return;
           } catch (e) {
@@ -140,17 +132,18 @@ export default function DataTabPanel({ value, file }: Props) {
                 .filter(([k]) => !k.startsWith("@"))
                 .map(([k, v]) => {
                   let value = v.toString();
-                  let isJson = false;
+                  let type: Row["type"] = "string";
                   if (typeof v == "object") {
                     value = JSON.stringify(v, undefined, 2);
-                    isJson = true;
+                    type = "json";
                   }
                   return {
                     key: formatKey(k),
                     value,
-                    isJson,
+                    type,
                   };
                 }),
+              type: TableType.COMMON,
             });
           });
         } finally {
@@ -187,36 +180,7 @@ export default function DataTabPanel({ value, file }: Props) {
                   {section.title}
                 </AccordionSummary>
                 <AccordionDetails>
-                  <Table>
-                    <tbody>
-                      {section.rows.map((row, index) => (
-                        <tr key={index}>
-                          <th
-                            style={{ width: "28%", verticalAlign: "top" }}
-                            scope="row"
-                          >
-                            {row.key}
-                          </th>
-                          <td>
-                            {row.isJson ? (
-                              <Box
-                                component="pre"
-                                sx={{
-                                  margin: 0,
-                                  overflow: "hidden",
-                                  whiteSpace: "break-spaces",
-                                }}
-                              >
-                                {row.value}
-                              </Box>
-                            ) : (
-                              <React.Fragment>{row.value}</React.Fragment>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </Table>
+                  <CommonTable section={section} />
                 </AccordionDetails>
               </Accordion>
             ))}
