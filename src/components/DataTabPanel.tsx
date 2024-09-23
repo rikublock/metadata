@@ -1,6 +1,7 @@
 import React from "react";
 
 import ExifReader from "exifreader";
+import JSON5 from "json5";
 
 import {
   Accordion,
@@ -110,8 +111,8 @@ export default function DataTabPanel({ value, file }: Props) {
                 }
               } else if (v.startsWith("{")) {
                 try {
-                  const data = JSON.parse(value.description);
-                  v = JSON.stringify(data, undefined, 2);
+                  const data = JSON5.parse(value.description);
+                  v = JSON5.stringify(data, { space: 2, quote: '"' });
                   type = "json";
                 } catch (e) {
                   // okay, attempted to parse JSON, but didn't work
@@ -152,7 +153,7 @@ export default function DataTabPanel({ value, file }: Props) {
                   let value = v.toString();
                   let type: Row["type"] = "string";
                   if (typeof v == "object") {
-                    value = JSON.stringify(v, undefined, 2);
+                    value = JSON5.stringify(v, { space: 2, quote: '"' });
                     type = "json";
                   }
                   return {
