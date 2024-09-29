@@ -5,9 +5,10 @@ import GithubCorner from "react-github-corner";
 import { Alert, Box, Stack, Typography } from "@mui/joy";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 
+import { useFilesApi } from "./contexts/FilesContext";
 import DataTabs from "./components/DataTabs";
 import Dropzone from "./components/Dropzone";
-import { useFilesApi } from "./contexts/FilesContext";
+import ScrollTopButton from "./components/ScrollTopButton";
 
 export default function Main() {
   const { addFiles } = useFilesApi();
@@ -23,6 +24,7 @@ export default function Main() {
   return (
     <Box
       component="main"
+      id="anchor-back-to-top"
       sx={{
         padding: "2rem",
         margin: "auto",
@@ -41,6 +43,7 @@ export default function Main() {
         <Dropzone onDrop={onDrop} />
         <DataTabs />
       </Stack>
+      <ScrollTopButton />
     </Box>
   );
 }
