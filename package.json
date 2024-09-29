@@ -1,8 +1,8 @@
 {
   "name": "metadata-reader",
-  "description": "Minimalistic web app for reading media file metadata",
+  "description": "Minimalistic web app for reading media and model file metadata",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": {
     "name": "Riku Block",
     "email": "riku.block@gmail.com"
