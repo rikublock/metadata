@@ -14,10 +14,12 @@ import {
 } from "@mui/joy";
 
 import { useMediaInfo, makeReadChunk } from "../contexts/MediaInfoContext";
-import { formatFileSize, formatKey } from "../utils/format";
+import { formatFileSize, formatKey, formatNumber } from "../utils/format";
 import { computeSha256sum } from "../utils/hash";
-import { Row, Section, TableType } from "../types";
+import { readSafetensorsMetadata } from "../utils/safetensors";
+import { Row, Safetensors, Section, TableType } from "../types";
 import CommonTable from "./CommonTable";
+import TensorTable from "./TensorTable";
 
 type Props = {
   value: string | number;
@@ -28,7 +30,7 @@ export default function DataTabPanel({ value, file }: Props) {
   const mediaInfoRef = useMediaInfo();
   const [loading, setLoading] = React.useState<boolean>(false);
   const [hash, setHash] = React.useState<string>("");
-  const [sections, setSections] = React.useState<Section[]>([]);
+  const [sections, setSections] = React.useState<Section<TableType>[]>([]);
 
   // compute hash checksum
   React.useEffect(() => {
@@ -55,7 +57,7 @@ export default function DataTabPanel({ value, file }: Props) {
     const load = async (): Promise<void> => {
       if (mediaInfoRef.current) {
         setLoading(true);
-        const content: Section[] = [];
+        const content: Section<TableType>[] = [];
 
         try {
           // extract general file info
@@ -83,6 +85,77 @@ export default function DataTabPanel({ value, file }: Props) {
             type: TableType.COMMON,
           });
 
+          // attempt to extract safetensors metadata
+          try {
+            if (file.name.toLowerCase().endsWith(".safetensors")) {
+              const data = await readSafetensorsMetadata(file);
+              const tensors = JSON5.parse<Safetensors>(data);
+
+              const tensorTypes = new Set<string>();
+              let paramCount = 0n;
+
+              const rowsTensor: Row<TableType.TENSOR>[] = Object.entries(
+                tensors,
+              )
+                .filter(([k]) => k != "__metadata__")
+                .map(([k, v]) => {
+                  tensorTypes.add(v.dtype);
+                  paramCount += (v.shape as number[]).reduce(
+                    (a, b) => a * BigInt(b),
+                    1n,
+                  );
+                  return {
+                    name: k,
+                    dtype: v.dtype,
+                    shape: v.shape as number[],
+                  };
+                });
+
+              const rowsCommon: Row<TableType.COMMON>[] = [
+                {
+                  key: "parameter_count",
+                  value: formatNumber(Number(paramCount)),
+                },
+                {
+                  key: "tensor_dtypes",
+                  value: [...tensorTypes].join(", "),
+                },
+              ];
+
+              if (tensors.__metadata__) {
+                Object.entries(tensors.__metadata__).forEach(([k, v]) => {
+                  rowsCommon.push({
+                    key: formatKey(k),
+                    value: v,
+                  });
+                });
+              }
+
+              content.push({
+                title: "Model",
+                rows: rowsCommon,
+                type: TableType.COMMON,
+              });
+
+              content.push({
+                title: "Tensors",
+                rows: rowsTensor,
+                type: TableType.TENSOR,
+              });
+
+              // success, no need to try other extraction tools
+              return;
+            }
+          } catch (e) {
+            if (
+              !["Invalid header length", "Malformed header"].includes(
+                (e as Error).message,
+              )
+            ) {
+              throw e;
+            }
+          }
+
           // attempt to extract image metadata
           try {
             const tags = await ExifReader.load(file, {
@@ -92,10 +165,10 @@ export default function DataTabPanel({ value, file }: Props) {
 
             delete tags["MakerNote"];
 
-            const r: Row[] = [];
+            const r: Row<TableType.COMMON>[] = [];
             for (const [key, value] of Object.entries(tags)) {
               let v = value.description.toString();
-              let type: Row["type"] = "string";
+              let type: Row<TableType.COMMON>["type"] = "string";
 
               if (v == "[Unicode encoded text]") {
                 if (Array.isArray(value.value) && value.value.length >= 8) {
@@ -151,7 +224,7 @@ export default function DataTabPanel({ value, file }: Props) {
                 .filter(([k]) => !k.startsWith("@"))
                 .map(([k, v]) => {
                   let value = v.toString();
-                  let type: Row["type"] = "string";
+                  let type: Row<TableType.COMMON>["type"] = "string";
                   if (typeof v == "object") {
                     value = JSON5.stringify(v, { space: 2, quote: '"' });
                     type = "json";
@@ -184,7 +257,7 @@ export default function DataTabPanel({ value, file }: Props) {
   // add checksum hash
   const sectionsUpdated = React.useMemo(() => {
     if (hash.length > 0 && sections.length > 0) {
-      const row = sections[0].rows[3];
+      const row = sections[0].rows[3] as Row<TableType.COMMON>;
       row.value = hash;
       row.type = "string";
     }
@@ -209,7 +282,15 @@ export default function DataTabPanel({ value, file }: Props) {
                   {section.title}
                 </AccordionSummary>
                 <AccordionDetails>
-                  <CommonTable section={section} />
+                  {section.type == TableType.TENSOR ? (
+                    <TensorTable
+                      section={section as Section<TableType.TENSOR>}
+                    />
+                  ) : (
+                    <CommonTable
+                      section={section as Section<TableType.COMMON>}
+                    />
+                  )}
                 </AccordionDetails>
               </Accordion>
             ))}

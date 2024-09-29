@@ -2,10 +2,10 @@ import React from "react";
 
 import { Box, CircularProgress, Table, Tooltip } from "@mui/joy";
 
-import { Section } from "../types";
+import { Section, TableType } from "../types";
 
 type Props = {
-  section: Section;
+  section: Section<TableType.COMMON>;
 };
 
 export default function CommonTable({ section }: Props) {
