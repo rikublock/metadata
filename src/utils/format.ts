@@ -2,7 +2,7 @@
  * Convert PascalCase keys to Python style snake_case.
  *
  * @param str key string
- * @returns Formatted
+ * @returns formatted string
  */
 export function formatKey(str: string): string {
   return str
@@ -17,10 +17,9 @@ export function formatKey(str: string): string {
  *
  * Based on: https://stackoverflow.com/a/14919494
  *
- * @param bytes Number of bytes
- * @param dp Number of decimal places to display
- *
- * @return Formatted string
+ * @param bytes number of bytes
+ * @param dp number of decimal places to display
+ * @return formatted string
  */
 export function formatFileSize(bytes: number, dp = 1): string {
   const thresh = 1000;
@@ -78,7 +77,7 @@ export function formatNumber(n: number, digits: number = 1): string {
  *
  * @param str file name
  * @param length max length
- * @returns
+ * @returns formatted string
  */
 export function formatFileName(str: string, length: number): string {
   if (str.length <= length) {

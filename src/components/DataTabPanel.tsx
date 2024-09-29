@@ -204,6 +204,8 @@ export default function DataTabPanel({ value, file }: Props) {
               rows: r,
               type: TableType.COMMON,
             });
+
+            // success, no need to try other extraction tools
             return;
           } catch (e) {
             if ((e as Error).message != "Invalid image format") {
